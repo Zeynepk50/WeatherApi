@@ -15,8 +15,8 @@ function App() {
     setLoading(true);
     setError(null);
     setShowSuggestions(false);
-    
-    let url = 'http://localhost:5021/weatherforecast';
+
+    let url = '/weatherforecast';
     if (coords) {
       url += `?lat=${coords.lat}&lon=${coords.lon}&locationName=${encodeURIComponent(coords.name)}`;
     } else if (searchCity) {
@@ -52,7 +52,7 @@ function App() {
     }
 
     const timer = setTimeout(() => {
-      fetch(`http://localhost:5021/weatherforecast/search?query=${encodeURIComponent(city)}`)
+      fetch(`/weatherforecast/search?query=${encodeURIComponent(city)}`)
         .then(res => res.json())
         .then(data => {
           setSuggestions(data);
@@ -88,10 +88,10 @@ function App() {
     setCity(suggestion.name);
     setShowSuggestions(false);
     setSuggestions([]);
-    fetchWeather('', { 
-      lat: suggestion.latitude, 
-      lon: suggestion.longitude, 
-      name: fullLocation 
+    fetchWeather('', {
+      lat: suggestion.latitude,
+      lon: suggestion.longitude,
+      name: fullLocation
     });
   };
 
@@ -110,19 +110,19 @@ function App() {
       <header className="header">
         <h1>Weather Dashboard</h1>
         <p>Current weather forecasts for {currentLocation || 'your location'}</p>
-        
+
         <form onSubmit={handleSearch} className="search-bar">
           <div className="search-input-wrapper">
-            <input 
-              type="text" 
-              placeholder="Search city..." 
+            <input
+              type="text"
+              placeholder="Search city..."
               value={city}
               onChange={(e) => setCity(e.target.value)}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
             />
             <button type="submit">Search</button>
           </div>
-          
+
           {showSuggestions && suggestions.length > 0 && (
             <ul className="suggestions-list">
               {suggestions.map((s, i) => (
