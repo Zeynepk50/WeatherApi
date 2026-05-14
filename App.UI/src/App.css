@@ -93,11 +93,8 @@
 }
 
 .suggestions-list li {
-  padding: 1rem 1.5rem;
+  padding: 0.8rem 1.2rem;
   cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   transition: background 0.2s;
 }
 
@@ -105,17 +102,21 @@
   background: rgba(14, 165, 233, 0.15);
 }
 
+.suggestion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 .suggestion-name {
   font-weight: 600;
   color: #fff;
+  font-size: 1rem;
 }
 
-.suggestion-country {
+.suggestion-details {
   font-size: 0.8rem;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
 }
 
 .weather-grid {

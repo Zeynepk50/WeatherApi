@@ -20,13 +20,19 @@ namespace App.API.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public async Task<IActionResult> Get([FromQuery] string? city)
+        public async Task<IActionResult> Get([FromQuery] string? city, [FromQuery] float? lat, [FromQuery] float? lon, [FromQuery] string? locationName)
         {
             try 
             {
+                if (lat.HasValue && lon.HasValue)
+                {
+                    var forecast = await _weatherService.GetForecastByCoordsAsync(lat.Value, lon.Value, locationName ?? "Selected Location");
+                    return Ok(forecast);
+                }
+
                 var location = city ?? _configuration["AppSettings:DefaultCity"] ?? "Istanbul";
-                var forecast = await _weatherService.GetForecastAsync(location);
-                return Ok(forecast);
+                var cityForecast = await _weatherService.GetForecastAsync(location);
+                return Ok(cityForecast);
             }
             catch (Exception ex)
             {

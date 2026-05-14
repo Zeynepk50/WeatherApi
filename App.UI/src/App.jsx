@@ -11,13 +11,17 @@ function App() {
   const [currentLocation, setCurrentLocation] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const fetchWeather = (searchCity = '') => {
+  const fetchWeather = (searchCity = '', coords = null) => {
     setLoading(true);
     setError(null);
     setShowSuggestions(false);
-    const url = searchCity
-      ? `http://localhost:5021/weatherforecast?city=${encodeURIComponent(searchCity)}`
-      : 'http://localhost:5021/weatherforecast';
+    
+    let url = 'http://localhost:5021/weatherforecast';
+    if (coords) {
+      url += `?lat=${coords.lat}&lon=${coords.lon}&locationName=${encodeURIComponent(coords.name)}`;
+    } else if (searchCity) {
+      url += `?city=${encodeURIComponent(searchCity)}`;
+    }
 
     fetch(url)
       .then(response => {
@@ -60,16 +64,35 @@ function App() {
     return () => clearTimeout(timer);
   }, [city]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.search-bar')) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (city.trim()) {
+      setShowSuggestions(false);
+      setSuggestions([]);
       fetchWeather(city);
     }
   };
 
   const handleSelectSuggestion = (suggestion) => {
+    const fullLocation = `${suggestion.name}${suggestion.admin1 ? ', ' + suggestion.admin1 : ''}, ${suggestion.country}`;
     setCity(suggestion.name);
-    fetchWeather(suggestion.name);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    fetchWeather('', { 
+      lat: suggestion.latitude, 
+      lon: suggestion.longitude, 
+      name: fullLocation 
+    });
   };
 
   const getWeatherIcon = (summary) => {
@@ -87,25 +110,29 @@ function App() {
       <header className="header">
         <h1>Weather Dashboard</h1>
         <p>Current weather forecasts for {currentLocation || 'your location'}</p>
-
+        
         <form onSubmit={handleSearch} className="search-bar">
           <div className="search-input-wrapper">
-            <input
-              type="text"
-              placeholder="Search city..."
+            <input 
+              type="text" 
+              placeholder="Search city..." 
               value={city}
               onChange={(e) => setCity(e.target.value)}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
             />
             <button type="submit">Search</button>
           </div>
-
+          
           {showSuggestions && suggestions.length > 0 && (
             <ul className="suggestions-list">
               {suggestions.map((s, i) => (
                 <li key={i} onClick={() => handleSelectSuggestion(s)}>
-                  <span className="suggestion-name">{s.name}</span>
-                  <span className="suggestion-country">{s.country}</span>
+                  <div className="suggestion-info">
+                    <span className="suggestion-name">{s.name}</span>
+                    <span className="suggestion-details">
+                      {s.admin1 && `${s.admin1}, `}{s.country}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
