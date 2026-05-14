@@ -1,31 +1,19 @@
-﻿using App.Repositories;
-using App.Repositories.Products;
 using App.Services.Products;
+using App.Services.Weather;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace App.Services.Extension
 {
-    public static class ServiceExtension //Extention method yazdığımız için sınıfımız static
+    public static class ServiceExtension 
     {
-        public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) //static void yerine IServiceCollection dönmesini istedik.
+        public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) 
         {
-
+            services.AddHttpClient();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IWeatherService, WeatherService>();
 
-            
-            
-            return services;   //services döndersin.
-
-
-
+            return services;
         }
-
     }
 }

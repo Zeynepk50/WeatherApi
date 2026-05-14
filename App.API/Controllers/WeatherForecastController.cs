@@ -1,5 +1,6 @@
-using App.Services.Products;
+using App.Services.Weather;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Json;
 
 namespace App.API.Controllers
 {
@@ -7,34 +8,48 @@ namespace App.API.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private readonly IWeatherService _weatherService;
+        private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient;
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(IWeatherService weatherService, IConfiguration configuration, HttpClient httpClient)
         {
-            _logger = logger;
+            _weatherService = weatherService;
+            _configuration = configuration;
+            _httpClient = httpClient;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get(IProductService productService)
+        public async Task<IActionResult> Get([FromQuery] string? city)
         {
-
-            var products = productService.GetTopPriceProductAsync(count: 3).Result;
-            //products.Data[2].Name = "awrwreas";   bunu engellememeiz lazým. Böyle bir durum olmamalý. Orijinal dönen datada deðiþiklik yapýlmaz. Çünkü bunlar referans tipi olduðu için datanýn kendisini deðil pointerý taþýyorlar
-            //Böyle bir deðiþiklik baþka yerleri de etkiler. Eðer gerekiyorsa yeni bir nesne tanýmlanýr ve öyle yapýlýr.
-
-
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            try 
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                var location = city ?? _configuration["AppSettings:DefaultCity"] ?? "Istanbul";
+                var forecast = await _weatherService.GetForecastAsync(location);
+                return Ok(forecast);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                return Ok(new List<object>());
+
+            try 
+            {
+                var url = $"https://geocoding-api.open-meteo.com/v1/search?name={query}&count=5&language=en&format=json";
+                var response = await _httpClient.GetFromJsonAsync<GeoResponse>(url);
+                return Ok(response?.Results ?? new List<GeoResult>());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }
